@@ -1,34 +1,24 @@
-import os
+def encrypt(message: str, rounds: int = 16, block_size: int = 8) -> str:
+    """Сеть Фейстеля"""
+    if len(message) % 2 != 0:
+        message += ' '
+    
+    left, right = message[:len(message)//2], message[len(message)//2:]
+    
+    for i in range(rounds):
+        round_func = lambda x, k: ''.join(chr((ord(c) + k) % 256) for c in x)
+        new_right = ''.join(chr(ord(l) ^ ord(r)) for l, r in zip(left, round_func(right, i)))
+        left, right = right, new_right
+    
+    return left + right
 
-from ciphers import caesar
-
-def encrypt(key: int, message: str, block_size: int = 16) -> bytes:
-    """CBC режим с шифром Цезаря"""
-    iv = os.urandom(block_size)
-    blocks = [message[i:i+block_size] for i in range(0, len(message), block_size)]
-    cipher_blocks = []
-    prev_block = iv
+def decrypt(ciphertext: str, rounds: int = 16, block_size: int = 8) -> str:
+    """Дешифрование Фейстеля"""
+    left, right = ciphertext[:len(ciphertext)//2], ciphertext[len(ciphertext)//2:]
     
-    for block in blocks:
-        xored = ''.join(chr(ord(a) ^ b) for a, b in zip(block, prev_block))
-        encrypted = caesar.encrypt(key, xored)
-        cipher_blocks.append(encrypted)
-        prev_block = [ord(c) for c in encrypted]
+    for i in reversed(range(rounds)):
+        round_func = lambda x, k: ''.join(chr((ord(c) + k) % 256) for c in x)
+        old_left = ''.join(chr(ord(r) ^ ord(l)) for l, r in zip(right, round_func(left, i)))
+        right, left = left, old_left
     
-    return iv + b''.join(bytes(ord(c) for c in ''.join(cipher_blocks)))
-
-def decrypt(key: int, ciphertext: bytes, block_size: int = 16) -> str:
-    """Дешифрование CBC"""
-    iv = ciphertext[:block_size]
-    ciphertext = ciphertext[block_size:]
-    blocks = [ciphertext[i:i+block_size] for i in range(0, len(ciphertext), block_size)]
-    message_blocks = []
-    prev_block = iv
-    
-    for block in blocks:
-        decrypted = caesar.decrypt(key, ''.join(chr(b) for b in block))
-        xored = ''.join(chr(ord(d) ^ p) for d, p in zip(decrypted, prev_block))
-        message_blocks.append(xored)
-        prev_block = block
-    
-    return ''.join(message_blocks)
+    return left + right
