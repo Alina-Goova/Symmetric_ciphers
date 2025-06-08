@@ -1,7 +1,9 @@
-def encrypt(k: int, m: str) -> str:
-    """Шифрование Цезаря с модулем 65536"""
-    return ''.join(map(chr, [(x + k) % 65536 for x in map(ord, m)]))
+from collections import Counter
 
-def decrypt(k: int, c: str) -> str:
-    """Дешифрование Цезаря"""
-    return ''.join(map(chr, [(x - k) % 65536 for x in map(ord, c)]))
+from ciphers.caesar import decrypt
+
+def crack_caesar(ciphertext: str) -> tuple[int, str]:
+    """Взлом шифра Цезаря частотным анализом"""
+    most_common = Counter(ciphertext).most_common(1)[0][0]
+    key = (ord(most_common) - ord(' ')) % 65536
+    return key, decrypt(key, ciphertext)
