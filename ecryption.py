@@ -1,9 +1,8 @@
-from collections import Counter
+def encrypt(key: str, message: str) -> str:
+    """Шифр Вернама (XOR)"""
+    if len(key) != len(message):
+        raise ValueError("Длина ключа должна совпадать с длиной сообщения")
+    return ''.join(chr(ord(m) ^ ord(k)) for m, k in zip(message, key))
 
-from ciphers.caesar import decrypt
-
-def crack_caesar(ciphertext: str) -> tuple[int, str]:
-    """Взлом шифра Цезаря частотным анализом"""
-    most_common = Counter(ciphertext).most_common(1)[0][0]
-    key = (ord(most_common) - ord(' ')) % 65536
-    return key, decrypt(key, ciphertext)
+# Для Вернама encrypt и decrypt одинаковы
+decrypt = encrypt
